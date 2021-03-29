@@ -1,0 +1,31 @@
+version: "3.8"
+
+services:
+  db:
+    image: postgres:13
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=12345
+      - POSTGRES_DB=test_qenetex
+  api:
+    build: test-qenetex-api
+    command: bash -c "poetry run alembic -c db/alembic.ini upgrade head && poetry run uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload"
+    volumes:
+      - .:/code
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+  front:
+    build:
+      context: test-qenetex-front
+    environment:
+      - APP_ENV=dev
+      - APP_BACKEND_URL=api:8000
+      - PORT=3000
+    volumes:
+      - .:/code
+    ports:
+      - "3000:3000"
